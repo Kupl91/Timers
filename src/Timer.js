@@ -3,6 +3,17 @@ import { useState, useEffect } from "react";
 const App = () => {
   const [comments, setComments] = useState([]);
 
+  useEffect(() => {
+    const commentsFromLocalStorage = localStorage.getItem("comments");
+    if (commentsFromLocalStorage) {
+      setComments(JSON.parse(commentsFromLocalStorage));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("comments", JSON.stringify(comments));
+  }, [comments]);
+
   const addComment = () => {
     setComments([...comments, { time: { hours: 0, minutes: 0, seconds: 0 }, comment: "" }]);
   };
