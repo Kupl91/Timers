@@ -1,22 +1,13 @@
 import { useState } from 'react'
-import Timer from 'my-react-timer-app/src/Timer.js'
-import 'my-react-timer-app/src/App.css'
-import viteLogo from './path-to-vite-logo'
-import reactLogo from './path-to-react-logo'
+import Timer from 'C:/Users/pavel.kuplensky/js/my-react-timer-app/src/Timer.js'
+import 'C:/Users/pavel.kuplensky/js/my-react-timer-app/src/App.css'
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
       <h1>Vite + React</h1>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
@@ -31,7 +22,7 @@ function App() {
       </p>
       <Timer />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
