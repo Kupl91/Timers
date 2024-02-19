@@ -1,6 +1,6 @@
 
-import Timer from 'C:/Users/pavel.kuplensky/js/my-react-timer-app/src/Timer.js'
-import 'C:/Users/pavel.kuplensky/js/my-react-timer-app/src/App.css'
+import Timer from './Timer.js'
+import './App.css'
 
 function App() {
 
