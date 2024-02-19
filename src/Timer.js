@@ -6,22 +6,27 @@ const App = () => {
   useEffect(() => {
     const commentsFromLocalStorage = localStorage.getItem("comments");
     if (commentsFromLocalStorage) {
-      setComments(JSON.parse(commentsFromLocalStorage).map(comment => ({...comment, time: new Date(comment.time)})));
+      setComments(JSON.parse(commentsFromLocalStorage).map(comment => ({...comment, time: new Date(comment.time), endTime: new Date(comment.endTime)})));
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("comments", JSON.stringify(comments.map(comment => ({...comment, time: comment.time.getTime()}))));
+    localStorage.setItem("comments", JSON.stringify(comments.map(comment => ({...comment, time: comment.time.getTime(), endTime: comment.endTime.getTime()}))));
   }, [comments]);
 
   const addComment = () => {
-    setComments([...comments, { time: new Date(0), comment: "", timerOn: false }]);
+    const newComment = { time: new Date(0), endTime: new Date(), comment: "", timerOn: false };
+    setComments([...comments, newComment]);
   };
 
   const startTimer = (index) => {
     setComments(prevComments => prevComments.map((comment, i) => {
       if (i === index) {
-        return {...comment, timerOn: true};
+        const newEndTime = new Date();
+        newEndTime.setSeconds(newEndTime.getSeconds() + comment.time.getUTCSeconds());
+        newEndTime.setMinutes(newEndTime.getMinutes() + comment.time.getUTCMinutes());
+        newEndTime.setHours(newEndTime.getHours() + comment.time.getUTCHours());
+        return {...comment, timerOn: true, endTime: newEndTime};
       }
       return comment;
     }));
