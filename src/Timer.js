@@ -6,92 +6,70 @@ const App = () => {
   useEffect(() => {
     const commentsFromLocalStorage = localStorage.getItem("comments");
     if (commentsFromLocalStorage) {
-      setComments(JSON.parse(commentsFromLocalStorage));
+      setComments(JSON.parse(commentsFromLocalStorage).map(comment => ({...comment, time: new Date(comment.time)})));
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("comments", JSON.stringify(comments));
+    localStorage.setItem("comments", JSON.stringify(comments.map(comment => ({...comment, time: comment.time.getTime()}))));
   }, [comments]);
 
   const addComment = () => {
-    setComments([...comments, { time: { hours: 0, minutes: 0, seconds: 0 }, comment: "" }]);
-  };
-
-  const handleChange = (e, index) => {
-    const { name, value } = e.target;
-    const newComments = comments.map((comment, i) => {
-      if (i === index) {
-        comment.time[name] = parseInt(value);
-      }
-      return comment;
-    });
-    setComments(newComments);
+    setComments([...comments, { time: new Date(0), comment: "", timerOn: false }]);
   };
 
   const startTimer = (index) => {
-    const newComments = comments.map((comment, i) => {
+    setComments(prevComments => prevComments.map((comment, i) => {
       if (i === index) {
-        comment.timer = setInterval(() => {
-          if (comment.time.seconds > 0) {
-            comment.time.seconds -= 1;
-          } else if (comment.time.minutes > 0) {
-            comment.time.minutes -= 1;
-            comment.time.seconds = 59;
-          } else if (comment.time.hours > 0) {
-            comment.time.hours -= 1;
-            comment.time.minutes = 59;
-            comment.time.seconds = 59;
-          } else {
-            clearInterval(comment.timer);
-          }
-          return comment;
-        }, 1000);
+        return {...comment, timerOn: true};
       }
       return comment;
-    });
-    setComments(newComments);
+    }));
   };
 
   const stopTimer = (index) => {
-    const newComments = comments.map((comment, i) => {
+    setComments(prevComments => prevComments.map((comment, i) => {
       if (i === index) {
-        clearInterval(comment.timer);
+        return {...comment, timerOn: false};
       }
       return comment;
-    });
-    setComments(newComments);
+    }));
   };
 
   const resetTimer = (index) => {
-    const newComments = comments.filter((comment, i) => i !== index);
-    setComments(newComments);
+    setComments(prevComments => prevComments.filter((comment, i) => i !== index));
+  };
+
+  const setTime = (index, hours, minutes, seconds) => {
+    setComments(prevComments => prevComments.map((comment, i) => {
+      if (i === index) {
+        const newTime = new Date(0);
+        newTime.setUTCHours(hours);
+        newTime.setUTCMinutes(minutes);
+        newTime.setUTCSeconds(seconds);
+        return {...comment, time: newTime};
+      }
+      return comment;
+    }));
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const newComments = comments.map((comment) => {
-        if (comment.timer) {
-          if (comment.time.seconds > 0) {
-            comment.time.seconds -= 1;
-          } else if (comment.time.minutes > 0) {
-            comment.time.minutes -= 1;
-            comment.time.seconds = 59;
-          } else if (comment.time.hours > 0) {
-            comment.time.hours -= 1;
-            comment.time.minutes = 59;
-            comment.time.seconds = 59;
-          } else {
-            clearInterval(comment.timer);
+      setComments(prevComments => prevComments.map((comment) => {
+        if (comment.timerOn) {
+          const newTime = new Date(comment.time.getTime() - 1000);
+          if (newTime.getUTCHours() === 0 && newTime.getUTCMinutes() === 0 && newTime.getUTCSeconds() === 0) {
+            alert(`Таймер "${comment.comment}" закончился!`); // Добавляем оповещение с названием таймера
+            return {...comment, timerOn: false};
           }
+          return {...comment, time: newTime};
         }
         return comment;
-      });
-      setComments(newComments);
+      }));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [comments]);
+  }, []);
 
   return (
     <div>
@@ -99,16 +77,13 @@ const App = () => {
       <ul>
         {comments.map((comment, index) => (
           <li key={index}>
-            <h1>
-              {comment.time.hours}:{comment.time.minutes}:{comment.time.seconds}
-            </h1>
             <form>
               <label htmlFor="hours">Hours:</label>
-              <input type="number" name="hours" value={comment.time.hours} min={0} max={999} step={1} onChange={(e) => handleChange(e, index)} />
+              <input type="number" name="hours" value={comment.time.getUTCHours()} min={0} max={999} step={1} onChange={(e) => setTime(index, e.target.value, comment.time.getUTCMinutes(), comment.time.getUTCSeconds())} />
               <label htmlFor="minutes">Minutes:</label>
-              <input type="number" name="minutes" value={comment.time.minutes} min={0} max={59} step={1} onChange={(e) => handleChange(e, index)} />
+              <input type="number" name="minutes" value={comment.time.getUTCMinutes()} min={0} max={59} step={1} onChange={(e) => setTime(index, comment.time.getUTCHours(), e.target.value, comment.time.getUTCSeconds())} />
               <label htmlFor="seconds">Seconds:</label>
-              <input type="number" name="seconds" value={comment.time.seconds} min={0} max={59} step={1} onChange={(e) => handleChange(e, index)} />
+              <input type="number" name="seconds" value={comment.time.getUTCSeconds()} min={0} max={59} step={1} onChange={(e) => setTime(index, comment.time.getUTCHours(), comment.time.getUTCMinutes(), e.target.value)} />
             </form>
             <button onClick={() => startTimer(index)}>Start</button>
             <button onClick={() => stopTimer(index)}>Stop</button>
@@ -117,13 +92,12 @@ const App = () => {
             <textarea
               value={comment.comment}
               onChange={(e) => {
-                const newComments = comments.map((comment, i) => {
+                setComments(prevComments => prevComments.map((comment, i) => {
                   if (i === index) {
-                    comment.comment = e.target.value;
+                    return {...comment, comment: e.target.value};
                   }
                   return comment;
-                });
-                setComments(newComments);
+                }));
               }}
             />
           </li>
